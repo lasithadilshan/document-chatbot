@@ -316,3 +316,5 @@ If this project helped you, please give it a ⭐ on GitHub!
 
 ## Architect Diagram
 
+![image](https://github.com/user-attachments/assets/26155af9-48db-4b67-bf6f-6a1431919cba)
+
