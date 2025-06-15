@@ -26,7 +26,7 @@ A modern, production-ready document processing chatbot that allows users to uplo
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/lasithadilshan/document-chatbot
    cd document-chatbot
    ```
 
