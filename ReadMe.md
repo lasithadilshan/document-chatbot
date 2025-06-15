@@ -316,7 +316,6 @@ If this project helped you, please give it a ⭐ on GitHub!
 
 ## Architect Diagram
 
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
