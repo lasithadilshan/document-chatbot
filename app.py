@@ -3,7 +3,6 @@ import os
 from document_processor import DocumentProcessor
 from vector_store import VectorStore
 from chat_handler import ChatHandler
-from dotenv import load_dotenv
 from datetime import datetime
 
 # Page configuration
