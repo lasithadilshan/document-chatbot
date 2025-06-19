@@ -54,9 +54,9 @@ def main():
     st.markdown("Upload documents and have intelligent conversations about their content!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Load environment variables
+    Load environment variables
     # load_dotenv()
-    # api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY")
 
     # if not api_key:
         # st.error("🔑 Google API Key not found. Please set GOOGLE_API_KEY in your .env file.")
