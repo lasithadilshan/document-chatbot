@@ -54,7 +54,7 @@ def main():
     st.markdown("Upload documents and have intelligent conversations about their content!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    Load environment variables
+    # Load environment variables
     # load_dotenv()
     api_key = os.getenv("GOOGLE_API_KEY")
 
