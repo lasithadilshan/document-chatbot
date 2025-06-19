@@ -54,24 +54,6 @@ def main():
     st.markdown("Upload documents and have intelligent conversations about their content!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Load environment variables
-    load_dotenv()
-    api_key = os.getenv("GOOGLE_API_KEY")
-
-    if not api_key:
-        st.error("🔑 Google API Key not found. Please set GOOGLE_API_KEY in your .env file.")
-        st.info("Get your API key from: https://aistudio.google.com/app/apikey")
-        st.stop()
-
-    # Initialize session state
-    initialize_session_state()
-
-    # Initialize components
-    if st.session_state.vector_store is None:
-        st.session_state.vector_store = VectorStore(api_key)
-    
-    chat_handler = ChatHandler(api_key)
-
     # Sidebar
     with st.sidebar:
         st.header("🔧 Configuration")
