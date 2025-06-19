@@ -67,8 +67,8 @@ def main():
     initialize_session_state()
 
     # Initialize components
-    # if st.session_state.vector_store is None:
-    #     st.session_state.vector_store = VectorStore(api_key)
+    if st.session_state.vector_store is None:
+        st.session_state.vector_store = VectorStore(api_key)
     
     chat_handler = ChatHandler(api_key)
 
