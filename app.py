@@ -70,7 +70,7 @@ def main():
     # if st.session_state.vector_store is None:
     #     st.session_state.vector_store = VectorStore(api_key)
     
-    # chat_handler = ChatHandler(api_key)
+    chat_handler = ChatHandler(api_key)
 
     # Sidebar
     with st.sidebar:
