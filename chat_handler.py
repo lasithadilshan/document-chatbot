@@ -1,53 +1,41 @@
-import google.generativeai as genai
+import os
 import streamlit as st
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple
+from huggingface_hub import InferenceClient
+
 
 class ChatHandler:
-    """Handles interaction with Google Gemini Flash 2.0 API"""
-    
+    """Handles interaction with the Hugging Face inference API."""
+
     def __init__(self, api_key: str):
-        """Initialize the chat handler with Gemini API"""
-        genai.configure(api_key=api_key)
-        
-        # Configure the model with optimized settings
-        self.generation_config = genai.GenerationConfig(
-            temperature=0.1,  # Lower temperature for more focused responses
-            top_p=0.8,
-            top_k=40,
-            max_output_tokens=2048,
-        )
-        
-        # Safety settings
-        self.safety_settings = [
-            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-        ]
-        
-        self.model = genai.GenerativeModel(
-            model_name='gemini-2.0-flash-exp',
-            generation_config=self.generation_config,
-            safety_settings=self.safety_settings
-        )
-    
+        """Initialize the chat handler with a Hugging Face token."""
+        resolved_key = str(api_key).strip() if api_key else os.getenv("HUGGINGFACE_API_KEY", "").strip()
+
+        if not resolved_key:
+            raise ValueError("HUGGINGFACE_API_KEY is missing. Please set the HUGGINGFACE_API_KEY environment variable or add it to your .env file before starting the app.")
+
+        self.model_name = "meta-llama/Llama-3.1-8B-Instruct"
+        self.client = InferenceClient(model=self.model_name, token=resolved_key)
+
     def generate_response(self, query: str, context_chunks: List[Tuple[str, float, dict]]) -> str:
-        """Generate response using Gemini with document context"""
+        """Generate a response using the configured Hugging Face model."""
         try:
-            # Prepare context from retrieved chunks
             context = self._prepare_context(context_chunks)
-            
-            # Create the prompt
             prompt = self._create_prompt(query, context)
-            
-            # Generate response
-            response = self.model.generate_content(prompt)
-            
-            if response.text:
-                return response.text
-            else:
-                return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
-                
+
+            response = self.client.text_generation(
+                prompt,
+                max_new_tokens=1024,
+                temperature=0.1,
+                top_p=0.8,
+                do_sample=True,
+            )
+
+            if response:
+                return response
+
+            return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+
         except Exception as e:
             st.error(f"Error generating response: {str(e)}")
             return "I encountered an error while generating a response. Please try again."
@@ -106,8 +94,14 @@ Please provide a helpful response while clearly explaining that you don't have s
 
 **SUMMARY:**"""
             
-            response = self.model.generate_content(prompt)
-            return response.text if response.text else "Could not generate summary."
+            response = self.client.text_generation(
+                prompt,
+                max_new_tokens=256,
+                temperature=0.1,
+                top_p=0.8,
+                do_sample=True,
+            )
+            return response if response else "Could not generate summary."
             
         except Exception as e:
             return f"Error generating summary: {str(e)}"
@@ -129,11 +123,17 @@ Please provide a helpful response while clearly explaining that you don't have s
 **SUGGESTED QUESTIONS:**
 Please provide questions in a simple list format."""
             
-            response = self.model.generate_content(prompt)
-            if response.text:
+            response = self.client.text_generation(
+                prompt,
+                max_new_tokens=256,
+                temperature=0.1,
+                top_p=0.8,
+                do_sample=True,
+            )
+            if response:
                 # Extract questions from the response
                 questions = []
-                for line in response.text.split('\n'):
+                for line in response.split('\n'):
                     line = line.strip()
                     if line and (line.startswith('-') or line.startswith('•') or line.startswith('*')):
                         question = line[1:].strip()

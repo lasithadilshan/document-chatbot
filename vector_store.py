@@ -1,25 +1,29 @@
 import faiss
 import numpy as np
-import google.generativeai as genai
+from sentence_transformers import SentenceTransformer
 from typing import List, Tuple, Optional
 import streamlit as st
 import pickle
 import os
 
+
 class VectorStore:
-    """Manages document embeddings using Gemini's embedding API and FAISS"""
-    
-    def __init__(self, api_key: str):
-        """Initialize the vector store with Gemini API"""
-        genai.configure(api_key=api_key)
-        self.embedding_model = "models/text-embedding-004"
-        self.dimension = 768  # Gemini text-embedding-004 dimension
+    """Manages document embeddings with sentence-transformers and FAISS."""
+
+    def __init__(self, api_key: str = None):
+        """Initialize the vector store with the Hugging Face embedding model."""
+        if api_key is not None and not str(api_key).strip():
+            api_key = None
+
+        self.embedding_model = "sentence-transformers/all-mpnet-base-v2"
+        self.model = SentenceTransformer(self.embedding_model)
+        self.dimension = getattr(self.model, "get_sentence_embedding_dimension", lambda: 768)()
         self.index = faiss.IndexFlatL2(self.dimension)
         self.texts = []
         self.metadata = []
         
     def _get_embeddings(self, texts: List[str]) -> np.ndarray:
-        """Get embeddings using Gemini's embedding API"""
+        """Generate embeddings with the sentence-transformers model."""
         try:
             embeddings = []
             
@@ -28,17 +32,17 @@ class VectorStore:
             for i in range(0, len(texts), batch_size):
                 batch = texts[i:i + batch_size]
                 
-                # Get embeddings for the batch
-                batch_embeddings = []
-                for text in batch:
-                    result = genai.embed_content(
-                        model=self.embedding_model,
-                        content=text,
-                        task_type="retrieval_document"
-                    )
-                    batch_embeddings.append(result['embedding'])
-                
-                embeddings.extend(batch_embeddings)
+                # Get embeddings for the batch using the Hugging Face model
+                batch_embeddings = self.model.encode(
+                    batch,
+                    convert_to_numpy=True,
+                    normalize_embeddings=True
+                )
+
+                if batch_embeddings.ndim == 1:
+                    batch_embeddings = batch_embeddings.reshape(1, -1)
+
+                embeddings.extend(batch_embeddings.tolist())
             
             return np.array(embeddings, dtype=np.float32)
         
@@ -53,7 +57,7 @@ class VectorStore:
         
         try:
             # Generate embeddings with progress bar
-            with st.spinner("Creating embeddings with Gemini..."):
+            with st.spinner("Creating embeddings with sentence-transformers..."):
                 embeddings = self._get_embeddings(texts)
             
             if embeddings.size == 0:
@@ -83,13 +87,13 @@ class VectorStore:
             return []
         
         try:
-            # Generate query embedding
-            result = genai.embed_content(
-                model=self.embedding_model,
-                content=query,
-                task_type="retrieval_query"
+            # Generate query embedding with the Hugging Face model
+            query_embedding = self.model.encode(
+                [query],
+                convert_to_numpy=True,
+                normalize_embeddings=True
             )
-            query_embedding = np.array([result['embedding']], dtype=np.float32)
+            query_embedding = np.array(query_embedding, dtype=np.float32)
             
             # Search in FAISS index
             distances, indices = self.index.search(query_embedding, min(k, self.index.ntotal))

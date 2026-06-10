@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from dotenv import load_dotenv
 from document_processor import DocumentProcessor
 from vector_store import VectorStore
 from chat_handler import ChatHandler
@@ -50,18 +51,18 @@ def main():
     # Header
     st.markdown("<div class='main-header'>", unsafe_allow_html=True)
     st.title("🤖 Modern Document Chat Assistant")
-    st.markdown("**Powered by Gemini Flash 2.0 & FAISS Vector Search**")
+    st.markdown("**Powered by Hugging Face Llama 3.1 & FAISS Vector Search**")
     st.markdown("Upload documents and have intelligent conversations about their content!")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Load environment variables
-    # load_dotenv()
-    api_key = os.getenv("GOOGLE_API_KEY")
+    # Load environment variables from the project .env file when present.
+    load_dotenv()
+    api_key = os.getenv("HUGGINGFACE_API_KEY", "").strip()
 
-    # if not api_key:
-        # st.error("🔑 Google API Key not found. Please set GOOGLE_API_KEY in your .env file.")
-        # st.info("Get your API key from: https://aistudio.google.com/app/apikey")
-        # st.stop()
+    if not api_key:
+        st.error("🔑 Hugging Face API key not found. Please set HUGGINGFACE_API_KEY in your .env file or export it in your shell.")
+        st.info("Get your API key from: https://huggingface.co/settings/tokens")
+        st.stop()
 
     # Initialize session state
     initialize_session_state()
