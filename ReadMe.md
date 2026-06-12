@@ -1,25 +1,25 @@
 # Modern Generative AI Document Processing Chatbot
 
-🤖 **Powered by Gemini Flash 2.0 & FAISS Vector Search**
+🤖 **Powered by Llama 3.1 & FAISS Vector Search**
 
-A modern, production-ready document processing chatbot that allows users to upload documents and have intelligent conversations about their content using Google's Gemini Flash 2.0 model.
+A modern, production-ready document processing chatbot that allows users to upload documents and have intelligent conversations about their content using Meta's Llama 3.1 model via the Hugging Face Inference API.
 
 ## ✨ Features
 
 - **Multi-format Support**: PDF, DOCX, and TXT files
-- **Intelligent Search**: FAISS vector database with Gemini embeddings
-- **Context-aware Responses**: Powered by Gemini Flash 2.0
+- **Intelligent Search**: FAISS vector database with local Hugging Face embeddings (`all-MiniLM-L6-v2`)
+- **Context-aware Responses**: Powered by Llama 3.1 8B Instruct
 - **Real-time Chat**: Interactive web interface with source attribution
 - **Smart Analytics**: Document processing statistics and chat metrics
 - **Suggested Questions**: AI-generated relevant questions
-- **Modern UI**: Clean, responsive Streamlit interface
+- **Premium UI**: Highly polished, modern interface with a rich Dark Blue default theme and seamless Dark Mode support
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Python 3.8+
-- Google AI Studio API Key
+- Hugging Face API Token
 - Git
 
 ### Installation
@@ -50,14 +50,17 @@ A modern, production-ready document processing chatbot that allows users to uplo
    
    Create a `.env` file in the project root:
    ```env
-   GOOGLE_API_KEY=your_gemini_api_key_here
+   HUGGINGFACE_API_KEY=your_hf_token_here
    ```
    
-   Get your API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+   Get your token from [Hugging Face](https://huggingface.co/settings/tokens)
 
 5. **Run the application**
+   
+   For optimal stability, especially on macOS, use the provided launch script which safely configures threading:
    ```bash
-   streamlit run app.py
+   chmod +x run.sh
+   ./run.sh
    ```
 
 6. **Open your browser**
@@ -70,12 +73,12 @@ A modern, production-ready document processing chatbot that allows users to uplo
 document-chatbot/
 ├── app.py                 # Main Streamlit application
 ├── document_processor.py  # Document parsing utilities
-├── vector_store.py       # FAISS vector store with Gemini embeddings
-├── chat_handler.py       # Gemini API interaction
-├── requirements.txt      # Dependencies
-├── .env                  # Environment variables (create this)
-├── .gitignore           # Git ignore rules
-└── README.md            # ReadMe file
+├── vector_store.py        # FAISS vector store with HF embeddings
+├── chat_handler.py        # Hugging Face Inference API interaction
+├── requirements.txt       # Dependencies
+├── .env                   # Environment variables (create this)
+├── .gitignore             # Git ignore rules
+└── ReadMe.md              # ReadMe file
 ```
 
 ## 🛠️ Core Components
@@ -87,14 +90,14 @@ document-chatbot/
 
 ### Vector Store (`vector_store.py`)
 - FAISS-based similarity search
-- Gemini text-embedding-004 for embeddings
+- Local `sentence-transformers` (`all-MiniLM-L6-v2`) for fast, cost-free embeddings
+- Thread-safe singleton implementation to prevent macOS `fork()` crashes
 - Persistent storage and retrieval
 - Batch processing for efficiency
 
 ### Chat Handler (`chat_handler.py`)
-- Gemini Flash 2.0 integration
+- Llama 3.1 8B Instruct / Zephyr integration via Hugging Face Inference API
 - Context-aware response generation
-- Safety settings and content filtering
 - Optimized prompt engineering
 
 ### Main Application (`app.py`)
@@ -107,12 +110,14 @@ document-chatbot/
 
 ```
 streamlit==1.39.0
-google-generativeai==0.8.3
+huggingface_hub
 faiss-cpu==1.8.0
 PyPDF2==3.0.1
 python-docx==1.1.2
 numpy==1.26.4
 python-dotenv==1.0.1
+sentence-transformers==3.0.1
+torch==2.3.1
 ```
 
 ## 🎯 Usage Examples
@@ -140,15 +145,14 @@ python-dotenv==1.0.1
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `GOOGLE_API_KEY` | Your Gemini API key from Google AI Studio | Yes |
+| `HUGGINGFACE_API_KEY` | Your Hugging Face API Token | Yes |
 
 ### Model Settings
 
-The application uses optimized settings for Gemini Flash 2.0:
+The application uses optimized settings for Llama 3.1:
 - **Temperature**: 0.1 (focused responses)
 - **Top-p**: 0.8
-- **Top-k**: 40
-- **Max tokens**: 2048
+- **Max tokens**: 1024
 
 ## 📊 Features Overview
 
@@ -160,7 +164,7 @@ The application uses optimized settings for Gemini Flash 2.0:
 
 ### Vector Search
 - ✅ FAISS similarity search
-- ✅ Gemini embeddings (768 dimensions)
+- ✅ Local `sentence-transformers` embeddings (384 dimensions)
 - ✅ Relevance scoring
 - ✅ Source attribution
 
@@ -179,7 +183,7 @@ The application uses optimized settings for Gemini Flash 2.0:
 ## 🚀 Advanced Features
 
 ### Suggested Questions
-The application automatically generates relevant questions based on your document content using Gemini's understanding of the material.
+The application automatically generates relevant questions based on your document content using Llama's understanding of the material.
 
 ### Source Attribution
 Every response includes expandable source references showing:
@@ -207,14 +211,7 @@ The application includes comprehensive error handling for:
 ### Common Issues
 
 **API Key Problems:**
-```python
-# Test your API key
-import google.generativeai as genai
-genai.configure(api_key="your-key-here")
-model = genai.GenerativeModel('gemini-2.0-flash')
-response = model.generate_content("Hello!")
-print(response.text)
-```
+Ensure your `HUGGINGFACE_API_KEY` is correctly set in the `.env` file and that it has permissions to query models via the Inference API.
 
 **Memory Issues with Large Documents:**
 - Reduce chunk_size to 500-800 characters
@@ -234,8 +231,9 @@ print(response.text)
 ## 🚀 Deployment
 
 ### Local Development
+For optimal stability on all platforms (specifically mitigating `fork()` restrictions on macOS), run:
 ```bash
-streamlit run app.py
+./run.sh
 ```
 
 ### Production Deployment
@@ -248,15 +246,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 8501
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["./run.sh"]
 ```
-
-**Cloud Platforms:**
-- Google Cloud Run
-- AWS ECS/Fargate
-- Azure Container Instances
-- Heroku
-- Streamlit Cloud
 
 ## 🔄 Future Enhancements
 
@@ -264,7 +255,7 @@ CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0
 - [ ] Add Excel and PowerPoint support
 - [ ] Implement semantic chunking
 - [ ] Add vector store persistence
-- [ ] Enhanced UI with dark mode
+- [x] Enhanced UI with dark blue aesthetic and native dark mode
 
 ### Advanced Features
 - [ ] Multi-language support
@@ -292,7 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini Team** for the powerful Flash 2.0 model
+- **Meta & Hugging Face** for the Llama 3.1 model and Inference API
 - **Facebook AI Research** for FAISS vector search
 - **Streamlit Team** for the excellent web framework
 - **Open Source Community** for the supporting libraries
@@ -300,8 +291,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Documentation**: Check this README and inline code comments
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 - **Email**: dilshantilakaratne29@gmail.com
 
 ## 🌟 Show Your Support
@@ -312,9 +301,62 @@ If this project helped you, please give it a ⭐ on GitHub!
 
 **Built with ❤️ using modern AI technologies**
 
-*Last updated: June 2025*
+*Last updated: June 2026*
 
-## Architect Diagram
+## Architecture Diagram
 
-![image](https://github.com/user-attachments/assets/26155af9-48db-4b67-bf6f-6a1431919cba)
+```mermaid
+graph TD
+    %% Styling
+    classDef user fill:#6C5CE7,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef ui fill:#0f172a,stroke:#6C5CE7,stroke-width:2px,color:#fff;
+    classDef logic fill:#1e293b,stroke:#a29bfe,stroke-width:2px,color:#fff;
+    classDef data fill:#1e293b,stroke:#00b894,stroke-width:2px,color:#fff;
+    classDef external fill:#2d3748,stroke:#fdcb6e,stroke-width:2px,color:#fff,stroke-dasharray: 5 5;
 
+    User((User)):::user
+
+    subgraph Frontend
+        UI[Streamlit UI<br/>app.py]:::ui
+    end
+
+    subgraph Backend Logic
+        DP[Document Processor<br/>document_processor.py]:::logic
+        VS[Vector Store<br/>vector_store.py]:::logic
+        CH[Chat Handler<br/>chat_handler.py]:::logic
+    end
+
+    subgraph Local Models & Data
+        HF[Hugging Face Model<br/>all-MiniLM-L6-v2]:::data
+        FAISS[(FAISS Index)]:::data
+    end
+
+    subgraph External APIs
+        Llama[Hugging Face API<br/>Llama 3.1 8B]:::external
+    end
+
+    %% Flow: Upload
+    User -- "Upload Docs (PDF/DOCX/TXT)" --> UI
+    UI -- "Extract & Chunk Text" --> DP
+    DP -- "Text Chunks" --> VS
+
+    %% Flow: Indexing
+    VS -- "Generate Embeddings" --> HF
+    HF -- "Vectors" --> VS
+    VS -- "Store Vectors" --> FAISS
+
+    %% Flow: Querying
+    User -- "Ask Question" --> UI
+    UI -- "Query" --> VS
+    VS -- "Embed Query" --> HF
+    HF -- "Query Vector" --> VS
+    VS -- "Similarity Search" --> FAISS
+    FAISS -- "Relevant Chunks" --> VS
+    
+    %% Flow: Generation
+    VS -- "Context + Query" --> CH
+    CH -- "Prompt" --> Llama
+    Llama -- "AI Response" --> CH
+    CH -- "Answer + Sources" --> UI
+    UI -- "Display" --> User
+```
