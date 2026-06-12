@@ -43,10 +43,10 @@ CUSTOM_CSS = """
     --accent-dark: #4834d4;
     --accent-bg: rgba(108,92,231,0.1);
 
-    /* Surfaces - Dynamic based on Streamlit Theme */
-    --surface: var(--background-color);
-    --surface-alt: var(--secondary-background-color);
-    --surface-raised: var(--background-color);
+    /* Surfaces - Dynamic but tinted to avoid pure white */
+    --surface: color-mix(in srgb, var(--background-color) 97%, var(--accent-dark));
+    --surface-alt: color-mix(in srgb, var(--secondary-background-color) 95%, var(--accent-dark));
+    --surface-raised: color-mix(in srgb, var(--background-color) 94%, var(--accent-dark));
     --surface-hover: color-mix(in srgb, var(--background-color) 95%, var(--text-color) 5%);
 
     /* Text - Dynamic based on Streamlit Theme */
