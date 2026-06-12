@@ -1,5 +1,14 @@
-import streamlit as st
 import os
+# Must be set before importing sentence_transformers / tokenizers / torch
+# to prevent segmentation faults caused by:
+#   1. Rust tokenizers forking threads inside Streamlit's process model
+#   2. OpenMP spawning threads that conflict with fork()
+#   3. PyTorch MPS (Metal) backend holding GPU memory across forks
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.0"
+
+import streamlit as st
 from dotenv import load_dotenv
 from document_processor import DocumentProcessor
 from vector_store import VectorStore
